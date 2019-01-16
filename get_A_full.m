@@ -31,14 +31,15 @@ function [Npix, grid_points, A_1, A_2] = get_A_full(B, j_min, j_max, theta, phi,
     [~,~,A_theta] = get_A_part_ss('theta', B, j_min, j_max, theta, phi);  
 % Construct A_1 
 
-    A_1 = k_theta.*sin(theta)./sin(theta/4).*A_phi-4*k_phi.*A_theta;
+    M = size(A_phi, 2);
+    A_1 = repmat(k_theta.*sin(theta)./sin(theta/4), 1, M).*A_phi-4*repmat(k_phi, 1, M).*A_theta;
 
 %%% Constructing psi_jk^(2) -> A_2
 
 % Get \psi_{jk}, Npix, grid_points
     [Npix, grid_points, A] = get_A_ss(B, j_min, j_max, theta, phi);
 % Construct A_2
-    A_2 = 4*k_phi.*A;
+    A_2 = 4*repmat(k_phi, 1, M).*A;
 
 
 
