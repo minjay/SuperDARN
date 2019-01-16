@@ -19,7 +19,7 @@ alt = 300;
 coord = 'geodetic';
 
 len = length(glat);
-Bf = zeros(len,1);
+Bf = zeros(len, 1);
 
 for i = 1:len
   [~, ~ , Bf(i, 1)] = igrf(coef2012, glat(i), glon(i), alt, coord);
