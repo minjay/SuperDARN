@@ -18,3 +18,18 @@ for i = 20
     
     title(ts(i, :))
 end
+
+angle = 270 / 180 * pi;
+
+[~, I] = min(abs(lon_grd_mat(:, 1) - angle));
+
+figure
+plot(lat_grd_mat(I, :), sam_pot(I, :))
+
+
+angle = 90 / 180 * pi;
+
+[~, I] = min(abs(lon_grd_mat(:, 1) - angle));
+
+figure
+plot(lat_grd_mat(I, :), sam_pot(I, :))
