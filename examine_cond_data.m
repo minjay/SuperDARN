@@ -13,6 +13,10 @@ ped_cond_all = hdf5read('OP_2012-02-20_000000.h5', '/Pedersen_Conductance');
 ped_cond_all = reshape(ped_cond_all, 41, 180, size(ped_cond_all, 2));
 
 ts = hdf5read('OP_2012-02-20_000000.h5', '/ts');
+% The time series is of length 121
+% Start from 00:00:00 to 04:00:00
+% In comparison, in file examine_sam_data, the time series is of length
+% 120, starting from 00:02:00 (i.e. does not have the first time point).
 
 % convert latitude to colatitude.
 mag_colat = (90 - mag_lat) / 180 * pi;
