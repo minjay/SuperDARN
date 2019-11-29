@@ -53,8 +53,11 @@ phi_rot = lon_grd_mat + pi/2;
 vmag = linspace(min(cf(:)), max(cf(:)), 10);
 mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf, vmag);
 
+%% Compute Joule heating rate
+
 HX = lat_grd_mat(1, :);
 HY = lon_grd_mat(:, 1);
+% get numeric x-, y- gradient fields
 [FX, FY] = gradient(sam_pot + cf, HX, HY);
 [FX_sam, FY_sam] = gradient(cf, HX, HY);
 
@@ -67,6 +70,7 @@ E_phi_sam = -FY_sam./(R*sin(lat_grd_mat));
 % load conductance data
 ped_cond_all = hdf5read('OP_2012-02-29_000000.h5', '/Pedersen_Conductance');
 ped_cond_all = reshape(ped_cond_all, 41, 180, size(ped_cond_all, 2));
+% discard the first data point
 ped_cond = fliplr(ped_cond_all(:, :, time_point + 1)');
 
 % compute energy
@@ -80,15 +84,16 @@ lat_grd_mat = lat_grd_mat(:, 2:end);
 lon_grd_mat = lon_grd_mat(:, 2:end);
 
 phi_rot = lon_grd_mat + pi/2;
-[x, y] = pol2cart(phi_rot, lat_grd_mat / 4 /pi * 180);
+[x, y] = pol2cart(phi_rot, lat_grd_mat / pi * 180);
 vmag = linspace(min(energy(:)), max(energy(:)), 10);
 figure
-mypolar([0 2*pi], [0 max(lat_grd_mat(:) / 4)/pi*180], x, y, energy, vmag);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, energy, vmag);
 vmag = linspace(min(energy_sam(:)), max(energy_sam(:)), 10);
 figure
-mypolar([0 2*pi], [0 max(lat_grd_mat(:) / 4)/pi*180], x, y, energy_sam, vmag);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, energy_sam, vmag);
 
 % compute the area of each latitudinal band
+% first column with Inf has already been dropped
 theta_one = lat_grd_mat(1, :);
 n_theta = length(theta_one);
 area_theta = zeros(1, n_theta);
@@ -103,6 +108,7 @@ for i = 1:n_theta
     else
         theta_upper = (theta_one(i)+theta_one(i+1))/2;
     end
+    % 90 - x to convert colatitude to latitude
     area_theta(i) = areaquad(90-theta_lower/pi*180, -180, 90-theta_upper/pi*180, 180);
 end
 
