@@ -6,14 +6,13 @@ clc
 % load sam pot (provided by Xueling)
 load('2012-02-29_00_00-2012-02-29_04_00_sam_pot_data.mat')
 
+% load conductance data
+ped_cond_all = hdf5read('OP_2012-02-29_000000.h5', '/Pedersen_Conductance');
+ped_cond_all = reshape(ped_cond_all, 41, 180, size(ped_cond_all, 2));
+
 % convert latitude to colatitude (90 - x).
 lat_grd_mat = fliplr((90 - reshape(lat_grd, [41 180])') / 180 * pi);
 lon_grd_mat = fliplr(reshape(lon_grd, [41 180])' / 180 * pi);
-
-% select first time point (do we need to draw a time series?)
-time_point = 1;
-% potential field from SAM
-sam_pot = fliplr(reshape(pot(time_point, :), [41 180])');
 
 % residual potential field fitted by needlets
 load('vs_0_2000_tweak_252.mat')
@@ -48,91 +47,90 @@ Ac = A * post_samples_c;
 cf_all = reshape(std_grid_vec .* Ac, [size(lon_grd_mat) size(Ac, 2)]);
 % convert to Volt
 cf_all = cf_all / 1e6;
-cf = mean(cf_all, 3);
-
-phi_rot = lon_grd_mat + pi/2;
-[x, y] = pol2cart(phi_rot, lat_grd_mat / pi * 180);
-vmag = linspace(min(cf(:)), max(cf(:)), 10);
-mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf, vmag);
 
 %% Compute Joule heating rate
 
-HX = lat_grd_mat(1, :);
-HY = lon_grd_mat(:, 1);
-% get numeric x-, y- gradient fields
-[FX_sam, FY_sam] = gradient(sam_pot, HX, HY);
-FX = zeros(size(cf_all));
-FY = zeros(size(cf_all));
-n_rep = size(cf_all, 3);
-for t = 1:n_rep
-    [FX(:, :, t), FY(:, :, t)] = gradient(sam_pot + cf_all(:, :, t), HX, HY);
-end
-R = 6.5*1e6;
-E_theta = -FX/R;
-E_phi = zeros(size(cf_all));
-for t = 1:n_rep
-    E_phi(:, :, t) = -FY(:, :, t)./(R*sin(lat_grd_mat));
-end
-E_theta_sam = -FX_sam/R;
-E_phi_sam = -FY_sam./(R*sin(lat_grd_mat));
+n_t = size(pot, 1);
+int_energy_mean = zeros(n_t, 1);
+int_energy_sam = zeros(n_t, 1);
+for time_point = 1:n_t
+    % potential field from SAM
+    sam_pot = fliplr(reshape(pot(time_point, :), [41 180])');
 
-% load conductance data
-ped_cond_all = hdf5read('OP_2012-02-29_000000.h5', '/Pedersen_Conductance');
-ped_cond_all = reshape(ped_cond_all, 41, 180, size(ped_cond_all, 2));
-% discard the first data point
-ped_cond = fliplr(ped_cond_all(:, :, time_point + 1)');
-
-% compute energy
-energy = zeros(size(cf_all));
-for t = 1:n_rep
-    energy(:, :, t) = (E_theta(:, :, t).^2+E_phi(:, :, t).^2).*ped_cond;
-end
-energy_sam = (E_theta_sam.^2+E_phi_sam.^2).*ped_cond;
-
-% drop first column (Inf)
-energy = energy(:, 2:end, :);
-energy_sam = energy_sam(:, 2:end);
-lat_grd_mat = lat_grd_mat(:, 2:end);
-lon_grd_mat = lon_grd_mat(:, 2:end);
-
-phi_rot = lon_grd_mat + pi/2;
-[x, y] = pol2cart(phi_rot, lat_grd_mat / pi * 180);
-energy_to_plot = energy(:, :, 1);
-vmag = linspace(min(energy_to_plot(:)), max(energy_to_plot(:)), 10);
-figure
-mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, energy_to_plot, vmag);
-vmag = linspace(min(energy_sam(:)), max(energy_sam(:)), 10);
-figure
-mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, energy_sam, vmag);
-
-% compute the area of each latitudinal band
-% first column with Inf has already been dropped
-theta_one = lat_grd_mat(1, :);
-n_theta = length(theta_one);
-area_theta = zeros(1, n_theta);
-for i = 1:n_theta
-    if i==1
-        theta_lower = 0;
-    else
-        theta_lower = (theta_one(i-1)+theta_one(i))/2;
+    HX = lat_grd_mat(1, :);
+    HY = lon_grd_mat(:, 1);
+    % get numeric x-, y- gradient fields
+    [FX_sam, FY_sam] = gradient(sam_pot, HX, HY);
+    FX = zeros(size(cf_all));
+    FY = zeros(size(cf_all));
+    n_rep = size(cf_all, 3);
+    for t = 1:n_rep
+        [FX(:, :, t), FY(:, :, t)] = gradient(sam_pot + cf_all(:, :, t), HX, HY);
     end
-    if i==n_theta
-        theta_upper = pi/4;
-    else
-        theta_upper = (theta_one(i)+theta_one(i+1))/2;
+    R = 6.5*1e6;
+    E_theta = -FX/R;
+    E_phi = zeros(size(cf_all));
+    for t = 1:n_rep
+        E_phi(:, :, t) = -FY(:, :, t)./(R*sin(lat_grd_mat));
     end
-    % 90 - x to convert colatitude to latitude
-    area_theta(i) = areaquad(90-theta_lower/pi*180, -180, 90-theta_upper/pi*180, 180);
+    E_theta_sam = -FX_sam/R;
+    E_phi_sam = -FY_sam./(R*sin(lat_grd_mat));
+
+    % discard the first data point
+    ped_cond = fliplr(ped_cond_all(:, :, time_point + 1)');
+
+    % compute energy
+    energy = zeros(size(cf_all));
+    for t = 1:n_rep
+        energy(:, :, t) = (E_theta(:, :, t).^2+E_phi(:, :, t).^2).*ped_cond;
+    end
+    energy_sam = (E_theta_sam.^2+E_phi_sam.^2).*ped_cond;
+
+    % drop first column (Inf)
+    energy = energy(:, 2:end, :);
+    energy_sam = energy_sam(:, 2:end);
+    lat_grd_mat_drop = lat_grd_mat(:, 2:end);
+    lon_grd_mat_drop = lon_grd_mat(:, 2:end);
+
+    % compute the area of each latitudinal band
+    % first column with Inf has already been dropped
+    theta_one = lat_grd_mat_drop(1, :);
+    n_theta = length(theta_one);
+    area_theta = zeros(1, n_theta);
+    for i = 1:n_theta
+        if i==1
+            theta_lower = 0;
+        else
+            theta_lower = (theta_one(i-1)+theta_one(i))/2;
+        end
+        if i==n_theta
+            theta_upper = pi/4;
+        else
+            theta_upper = (theta_one(i)+theta_one(i+1))/2;
+        end
+        % 90 - x to convert colatitude to latitude
+        area_theta(i) = areaquad(90-theta_lower/pi*180, -180, 90-theta_upper/pi*180, 180);
+    end
+
+    % compute integrated energy
+    tot_area = 4*pi*R^2;
+    % dividing by 1e9 is due to the unit giga
+    % since the areaquad function only gives a fraction of the unit sphere's area ranging from 0 to 1,
+    % we need to multiply back the total area
+    int_energy = zeros(n_rep, 1);
+    for t = 1:n_rep
+        int_energy(t) = sum(mean(energy(:, :, t), 1).*area_theta)*tot_area/1e9;
+    end
+    int_energy_mean(time_point) = mean(int_energy);
+    int_energy_sam(time_point) = sum(mean(energy_sam, 1).*area_theta)*tot_area/1e9;
 end
 
-% compute integrated energy
-tot_area = 4*pi*R^2;
-% dividing by 1e9 is due to the unit giga
-% since the areaquad function only gives a fraction of the unit sphere's area ranging from 0 to 1,
-% we need to multiply back the total area
-int_energy = zeros(n_rep, 1);
-for t = 1:n_rep
-    int_energy(t) = sum(mean(energy(:, :, t), 1).*area_theta)*tot_area/1e9;
-end
-int_energy_mean = mean(int_energy)
-int_energy_sam = sum(mean(energy_sam, 1).*area_theta)*tot_area/1e9
+figure
+int_energy_mean_ts = timeseries(int_energy_mean, ts);
+plot(int_energy_mean_ts, '-o')
+hold on
+int_energy_sam_ts = timeseries(int_energy_sam, ts);
+plot(int_energy_sam_ts, '-o')
+legend('SAM', 'SAM + Needlet')
+xlabel('Time [UT]')
+ylabel('Integrated Joule heating rate [GW]')
