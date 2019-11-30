@@ -68,7 +68,7 @@ cf_l3_kV = cf_l3 / 1e3;
 phi_rot = lon_grd_mat + pi/2;
 [x, y] = pol2cart(phi_rot, lat_grd_mat / pi * 180);
 
-subplot = @(m,n,p) subtightplot (m, n, p, [0.05 0.1], [0.05 0.02], [0.05 0.2]);
+subplot = @(m,n,p) subtightplot (m, n, p, [0.05 0.075], [0.05 0.02], [0.05 0.2]);
 subplot(1, 3, 1)
 vmag = linspace(min(cf_l2_kV(:)), max(cf_l2_kV(:)), 10);
 mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_l2_kV, vmag);
