@@ -38,6 +38,21 @@ b_mat_grid(:, 1) = 1;
 % size = number of data points * number of replicates
 std_grid_vec = exp(b_mat_grid * post_samples_eta);
 
+% estimated eta
+eta_hat = mean(post_samples_eta, 2);
+est_std_vec = exp(b_mat_grid * eta_hat);
+plot(theta_grd_vec / 4 / pi * 180, est_std_vec, '-o')
+xlabel('Co-latitude [degree]')
+
+ax = gca;
+outerpos = ax.OuterPosition;
+ti = ax.TightInset; 
+left = outerpos(1) + ti(1);
+bottom = outerpos(2) + ti(2);
+ax_width = outerpos(3) - ti(1) - ti(3);
+ax_height = outerpos(4) - ti(2) - ti(4);
+ax.Position = [left bottom ax_width ax_height];
+
 % size = number of data points * number of replicates
 Ac = A * post_samples_c;
 
