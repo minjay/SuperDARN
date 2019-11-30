@@ -43,10 +43,12 @@ Ac = A * post_samples_c;
 
 % Unit is 10^-6 Volt.
 % confirm the unit?
-% conditional distribution E(Z(s)|Z_1,...,Z_n)
-cf = reshape(mean(std_grid_vec .* Ac, 2), size(lon_grd_mat));
+% conditional expectation E(Z(s)|Z_1,...,Z_n)
+% conditional distribution Z(s)|Z_1,...,Z_n
+cf_all = reshape(std_grid_vec .* Ac, [size(lon_grd_mat) size(Ac, 2)]);
 % convert to Volt
-cf = cf / 1e6;
+cf_all = cf_all / 1e6;
+cf = mean(cf_all, 3);
 
 phi_rot = lon_grd_mat + pi/2;
 [x, y] = pol2cart(phi_rot, lat_grd_mat / pi * 180);
@@ -58,12 +60,19 @@ mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf, vmag);
 HX = lat_grd_mat(1, :);
 HY = lon_grd_mat(:, 1);
 % get numeric x-, y- gradient fields
-[FX, FY] = gradient(sam_pot + cf, HX, HY);
-[FX_sam, FY_sam] = gradient(cf, HX, HY);
-
+[FX_sam, FY_sam] = gradient(sam_pot, HX, HY);
+FX = zeros(size(cf_all));
+FY = zeros(size(cf_all));
+n_rep = size(cf_all, 3);
+for t = 1:n_rep
+    [FX(:, :, t), FY(:, :, t)] = gradient(sam_pot + cf_all(:, :, t), HX, HY);
+end
 R = 6.5*1e6;
 E_theta = -FX/R;
-E_phi = -FY./(R*sin(lat_grd_mat));
+E_phi = zeros(size(cf_all));
+for t = 1:n_rep
+    E_phi(:, :, t) = -FY(:, :, t)./(R*sin(lat_grd_mat));
+end
 E_theta_sam = -FX_sam/R;
 E_phi_sam = -FY_sam./(R*sin(lat_grd_mat));
 
@@ -74,20 +83,24 @@ ped_cond_all = reshape(ped_cond_all, 41, 180, size(ped_cond_all, 2));
 ped_cond = fliplr(ped_cond_all(:, :, time_point + 1)');
 
 % compute energy
-energy = (E_theta.^2+E_phi.^2).*ped_cond;
+energy = zeros(size(cf_all));
+for t = 1:n_rep
+    energy(:, :, t) = (E_theta(:, :, t).^2+E_phi(:, :, t).^2).*ped_cond;
+end
 energy_sam = (E_theta_sam.^2+E_phi_sam.^2).*ped_cond;
 
 % drop first column (Inf)
-energy = energy(:, 2:end);
+energy = energy(:, 2:end, :);
 energy_sam = energy_sam(:, 2:end);
 lat_grd_mat = lat_grd_mat(:, 2:end);
 lon_grd_mat = lon_grd_mat(:, 2:end);
 
 phi_rot = lon_grd_mat + pi/2;
 [x, y] = pol2cart(phi_rot, lat_grd_mat / pi * 180);
-vmag = linspace(min(energy(:)), max(energy(:)), 10);
+energy_to_plot = energy(:, :, 1);
+vmag = linspace(min(energy_to_plot(:)), max(energy_to_plot(:)), 10);
 figure
-mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, energy, vmag);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, energy_to_plot, vmag);
 vmag = linspace(min(energy_sam(:)), max(energy_sam(:)), 10);
 figure
 mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, energy_sam, vmag);
@@ -114,10 +127,12 @@ end
 
 % compute integrated energy
 tot_area = 4*pi*R^2;
-energy = reshape(energy, size(lon_grd_mat));
-energy_sam = reshape(energy_sam, size(lon_grd_mat));
 % dividing by 1e9 is due to the unit giga
 % since the areaquad function only gives a fraction of the unit sphere's area ranging from 0 to 1,
 % we need to multiply back the total area
-int_energy = sum(mean(energy, 1).*area_theta)*tot_area/1e9;
-int_energy_sam = sum(mean(energy_sam, 1).*area_theta)*tot_area/1e9;
+int_energy = zeros(n_rep, 1);
+for t = 1:n_rep
+    int_energy(t) = sum(mean(energy(:, :, t), 1).*area_theta)*tot_area/1e9;
+end
+int_energy_mean = mean(int_energy)
+int_energy_sam = sum(mean(energy_sam, 1).*area_theta)*tot_area/1e9
