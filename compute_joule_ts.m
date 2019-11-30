@@ -125,12 +125,34 @@ for time_point = 1:n_t
     int_energy_sam(time_point) = sum(mean(energy_sam, 1).*area_theta)*tot_area/1e9;
 end
 
+%% load AE index
+activity_data = readtable('OMNI_Feb29_2012.csv');
+
+% downsample data to every 2 mins
+activity_data = activity_data(1:2:size(activity_data, 1), :);
+
+% drop hr = 0, min = 0
+activity_data = activity_data(2:size(activity_data, 1), :);
+
+% select the first 4 hours
+activity_data = activity_data(1:120, :);
+
+% select column 6 (AE-index, [nT])
+ae_index = activity_data.x6;
+
+%% plot
 figure
+yyaxis left
 int_energy_sam_ts = timeseries(int_energy_sam, ts);
-plot(int_energy_sam_ts, '-o')
+plot(int_energy_sam_ts, 'k-o')
 hold on
 int_energy_mean_ts = timeseries(int_energy_mean, ts);
 plot(int_energy_mean_ts, '-o')
 legend('SAM', 'SAM + Needlet')
 xlabel('Time [UT]')
 ylabel('Integrated Joule heating rate [GW]')
+
+yyaxis right
+ae_index_ts = timeseries(ae_index, ts);
+plot(ae_index_ts, '-o')
+ylabel('AE index [nT]')
