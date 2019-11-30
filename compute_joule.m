@@ -30,7 +30,7 @@ lon_grd_vec = lon_grd_mat(:);
 B = 2;
 j_min = 2;
 j_max = 3;
-[~, ~, A] = get_A_ss(B, j_min, j_max, theta_grd_vec, lon_grd_vec);
+[Npix, ~, A] = get_A_ss(B, j_min, j_max, theta_grd_vec, lon_grd_vec);
 
 knots = [0 0 0 0 0.5 1 1 1 1]*pi;
 [b_mat_grid, ~] = bspline_basismatrix(4, knots, theta_grd_vec);
@@ -41,19 +41,60 @@ std_grid_vec = exp(b_mat_grid * post_samples_eta);
 % size = number of data points * number of replicates
 Ac = A * post_samples_c;
 
+Ac_l2 = A(:, 1:Npix(1)) * post_samples_c(1:Npix(1), :);
+Ac_l3 = A(:, (Npix(1)+1):size(A, 2)) * post_samples_c((Npix(1)+1):size(A, 2), :);
+
 % Unit is 10^-6 Volt.
 % confirm the unit?
 % conditional expectation E(Z(s)|Z_1,...,Z_n)
 % conditional distribution Z(s)|Z_1,...,Z_n
 cf_all = reshape(std_grid_vec .* Ac, [size(lon_grd_mat) size(Ac, 2)]);
+cf_l2_all = reshape(std_grid_vec .* Ac_l2, [size(lon_grd_mat) size(Ac_l2, 2)]);
+cf_l3_all = reshape(std_grid_vec .* Ac_l3, [size(lon_grd_mat) size(Ac_l3, 2)]);
+
 % convert to Volt
 cf_all = cf_all / 1e6;
+cf_l2_all = cf_l2_all / 1e6;
+cf_l3_all = cf_l3_all / 1e6;
 cf = mean(cf_all, 3);
+cf_l2 = mean(cf_l2_all, 3);
+cf_l3 = mean(cf_l3_all, 3);
+
+% convert to kV
+cf_kV = cf / 1e3;
+cf_l2_kV = cf_l2 / 1e3;
+cf_l3_kV = cf_l3 / 1e3;
 
 phi_rot = lon_grd_mat + pi/2;
 [x, y] = pol2cart(phi_rot, lat_grd_mat / pi * 180);
-vmag = linspace(min(cf(:)), max(cf(:)), 10);
-mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf, vmag);
+
+subplot = @(m,n,p) subtightplot (m, n, p, [0.05 0.1], [0.05 0.02], [0.05 0.2]);
+subplot(1, 3, 1)
+vmag = linspace(min(cf_l2_kV(:)), max(cf_l2_kV(:)), 10);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_l2_kV, vmag);
+title('j = 2')
+text(-50, -50, sprintf('Min\n%2.1f',min(cf_l2_kV(:))),'FontName','times','Fontsize',10)
+text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_l2_kV(:))),'FontName','times','Fontsize',10)
+subplot(1, 3, 2)
+vmag = linspace(min(cf_l3_kV(:)), max(cf_l3_kV(:)), 10);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_l3_kV, vmag);
+title('j = 3')
+text(-50, -50, sprintf('Min\n%2.1f',min(cf_l3_kV(:))),'FontName','times','Fontsize',10)
+text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_l3_kV(:))),'FontName','times','Fontsize',10)
+subplot(1, 3, 3)
+vmag = linspace(min(cf_kV(:)), max(cf_kV(:)), 10);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_kV, vmag);
+title('Total')
+text(-50, -50, sprintf('Min\n%2.1f',min(cf_kV(:))),'FontName','times','Fontsize',10)
+text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_kV(:))),'FontName','times','Fontsize',10)
+
+cmax = max([max(abs(cf_l2_kV)) max(abs(cf_l3_kV)) max(abs(cf_kV))]);
+caxis([-cmax cmax])
+colormap(jet)
+h = colorbar;
+set(h, 'Position', [.85 0.1 .025 .8]);
+
+print -painters -depsc multi_res_fitted.eps
 
 %% Compute Joule heating rate
 
