@@ -126,11 +126,11 @@ for time_point = 1:n_t
 end
 
 figure
-int_energy_mean_ts = timeseries(int_energy_mean, ts);
-plot(int_energy_mean_ts, '-o')
-hold on
 int_energy_sam_ts = timeseries(int_energy_sam, ts);
 plot(int_energy_sam_ts, '-o')
+hold on
+int_energy_mean_ts = timeseries(int_energy_mean, ts);
+plot(int_energy_mean_ts, '-o')
 legend('SAM', 'SAM + Needlet')
 xlabel('Time [UT]')
 ylabel('Integrated Joule heating rate [GW]')
