@@ -1,3 +1,6 @@
+clear 
+clc
+
 % load un-downsampled data
 load('sd_data.mat')
 % theta is the co-latitude after stretching
@@ -26,6 +29,7 @@ factor = Bf * radius;
 
 %[Npix, ~, A_1, A_2] = get_A_full(B, j_min, j_max, all_theta, all_phi, k_theta, k_phi);
 %save('A_mat.mat', 'A_1', 'A_2')
+% pre-computed by the above two lines of code and saved
 load('A_mat.mat')
 
 % for R code
@@ -33,29 +37,31 @@ load('A_mat.mat')
 
 [b_mat, ~] = bspline_basismatrix(4, knots, all_theta);
 b_mat(:, 1) = 1;
-eta_hat = mean(post_samples.eta, 2);
-std_vec = exp(b_mat * eta_hat);
+
+post_samples_eta = post_samples.eta;
+post_samples_c = squeeze(post_samples.c);
+
+std_vec = exp(b_mat * post_samples_eta);
 
 load('deriv_all_theta.mat')
 b_mat_deriv = bS;
 b_mat_deriv(:, 1) = 0;
-std_vec_deriv = b_mat_deriv * eta_hat .* std_vec;
+std_vec_deriv = (b_mat_deriv * post_samples_eta) .* std_vec;
 
 N = length(all_theta);
-M = size(A_1, 2);
-DA = zeros(N, M);
-for i = 1:N
-    DA(i, :) = std_vec(i) * A_1(i, :) - std_vec_deriv(i) * A_2(i,:);
-end
 
-c_hat = mean(squeeze(post_samples.c), 2);
+A1c = A_1 * post_samples_c;
+A2c = A_2 * post_samples_c;
 
-Y_fitted = DA * c_hat ./ factor;
+DAc = mean(std_vec .* A1c - std_vec_deriv .* A2c, 2);
+
+Y_fitted = DAc ./ factor;
 
 Y = Vlos_res';
 
 load('voroni_sphere_index.mat')
 
+% out-of-sample predictions
 figure
 unsampled_index = setdiff(1:N, sampled_index);
 plot(Y(unsampled_index), Y_fitted(unsampled_index), 'o')
@@ -68,6 +74,7 @@ hline.LineStyle = '--';
 xlabel('Observed')
 ylabel('Fitted')
 
+% in-sample predictions
 figure
 plot(Y(sampled_index), Y_fitted(sampled_index), 'o')
 axis('equal')
