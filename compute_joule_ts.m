@@ -52,6 +52,7 @@ cf_all = cf_all / 1e6;
 
 n_t = size(pot, 1);
 int_energy_mean = zeros(n_t, 1);
+int_energy_std = zeros(n_t, 1);
 int_energy_sam = zeros(n_t, 1);
 for time_point = 1:n_t
     % potential field from SAM
@@ -122,6 +123,7 @@ for time_point = 1:n_t
         int_energy(t) = sum(mean(energy(:, :, t), 1).*area_theta)*tot_area/1e9;
     end
     int_energy_mean(time_point) = mean(int_energy);
+    int_energy_std(time_point) = std(int_energy);
     int_energy_sam(time_point) = sum(mean(energy_sam, 1).*area_theta)*tot_area/1e9;
 end
 
@@ -147,8 +149,12 @@ int_energy_sam_ts = timeseries(int_energy_sam, ts);
 plot(int_energy_sam_ts, 'k-o')
 hold on
 int_energy_mean_ts = timeseries(int_energy_mean, ts);
+int_energy_ub_ts = timeseries(int_energy_mean + 2.*int_energy_std, ts);
+int_energy_lb_ts = timeseries(max(int_energy_mean - 2.*int_energy_std, 0), ts);
 plot(int_energy_mean_ts, '-o')
-legend('SAM', 'SAM + Needlet')
+plot(int_energy_ub_ts, '--')
+plot(int_energy_lb_ts, '--')
+legend('SAM', 'SAM + Needlet', 'SAM + Needlet (ub)', 'SAM + Needlet (lb)')
 xlabel('Time [UT]')
 ylabel('Integrated Joule heating rate [GW]')
 
