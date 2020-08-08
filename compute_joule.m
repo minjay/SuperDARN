@@ -74,36 +74,83 @@ cf_l3_all = cf_l3_all / 1e6;
 cf = mean(cf_all, 3);
 cf_l2 = mean(cf_l2_all, 3);
 cf_l3 = mean(cf_l3_all, 3);
+% pick two random samples
+cf_i1 = cf_all(:, :, 123);
+cf_l2_i1 = cf_l2_all(:, :, 123);
+cf_l3_i1 = cf_l3_all(:, :, 123);
+cf_i2 = cf_all(:, :, 456);
+cf_l2_i2 = cf_l2_all(:, :, 456);
+cf_l3_i2 = cf_l3_all(:, :, 456);
 
 % convert to kV
 cf_kV = cf / 1e3;
 cf_l2_kV = cf_l2 / 1e3;
 cf_l3_kV = cf_l3 / 1e3;
+cf_i1_kV = cf_i1 / 1e3;
+cf_l2_i1_kV = cf_l2_i1 / 1e3;
+cf_l3_i1_kV = cf_l3_i1 / 1e3;
+cf_i2_kV = cf_i2 / 1e3;
+cf_l2_i2_kV = cf_l2_i2 / 1e3;
+cf_l3_i2_kV = cf_l3_i2 / 1e3;
 
 phi_rot = lon_grd_mat + pi/2;
 [x, y] = pol2cart(phi_rot, lat_grd_mat / pi * 180);
 
 subplot = @(m,n,p) subtightplot (m, n, p, [0.05 0.075], [0.05 0.02], [0.05 0.2]);
-subplot(1, 3, 1)
+subplot(3, 3, 1)
 vmag = linspace(min(cf_l2_kV(:)), max(cf_l2_kV(:)), 10);
 mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_l2_kV, vmag);
 title('j = 2')
 text(-50, -50, sprintf('Min\n%2.1f',min(cf_l2_kV(:))),'FontName','times','Fontsize',10)
 text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_l2_kV(:))),'FontName','times','Fontsize',10)
-subplot(1, 3, 2)
+subplot(3, 3, 2)
 vmag = linspace(min(cf_l3_kV(:)), max(cf_l3_kV(:)), 10);
 mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_l3_kV, vmag);
 title('j = 3')
 text(-50, -50, sprintf('Min\n%2.1f',min(cf_l3_kV(:))),'FontName','times','Fontsize',10)
 text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_l3_kV(:))),'FontName','times','Fontsize',10)
-subplot(1, 3, 3)
+subplot(3, 3, 3)
 vmag = linspace(min(cf_kV(:)), max(cf_kV(:)), 10);
 mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_kV, vmag);
 title('Total')
 text(-50, -50, sprintf('Min\n%2.1f',min(cf_kV(:))),'FontName','times','Fontsize',10)
 text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_kV(:))),'FontName','times','Fontsize',10)
 
-cmax = max([max(abs(cf_l2_kV)) max(abs(cf_l3_kV)) max(abs(cf_kV))]);
+subplot(3, 3, 4)
+vmag = linspace(min(cf_l2_i1_kV(:)), max(cf_l2_i1_kV(:)), 10);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_l2_i1_kV, vmag);
+text(-50, -50, sprintf('Min\n%2.1f',min(cf_l2_i1_kV(:))),'FontName','times','Fontsize',10)
+text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_l2_i1_kV(:))),'FontName','times','Fontsize',10)
+subplot(3, 3, 5)
+vmag = linspace(min(cf_l3_i1_kV(:)), max(cf_l3_i1_kV(:)), 10);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_l3_i1_kV, vmag);
+text(-50, -50, sprintf('Min\n%2.1f',min(cf_l3_i1_kV(:))),'FontName','times','Fontsize',10)
+text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_l3_i1_kV(:))),'FontName','times','Fontsize',10)
+subplot(3, 3, 6)
+vmag = linspace(min(cf_i1_kV(:)), max(cf_i1_kV(:)), 10);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_i1_kV, vmag);
+text(-50, -50, sprintf('Min\n%2.1f',min(cf_i1_kV(:))),'FontName','times','Fontsize',10)
+text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_i1_kV(:))),'FontName','times','Fontsize',10)
+
+subplot(3, 3, 7)
+vmag = linspace(min(cf_l2_i2_kV(:)), max(cf_l2_i2_kV(:)), 10);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_l2_i2_kV, vmag);
+text(-50, -50, sprintf('Min\n%2.1f',min(cf_l2_i2_kV(:))),'FontName','times','Fontsize',10)
+text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_l2_i2_kV(:))),'FontName','times','Fontsize',10)
+subplot(3, 3, 8)
+vmag = linspace(min(cf_l3_i2_kV(:)), max(cf_l3_i2_kV(:)), 10);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_l3_i2_kV, vmag);
+text(-50, -50, sprintf('Min\n%2.1f',min(cf_l3_i2_kV(:))),'FontName','times','Fontsize',10)
+text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_l3_i2_kV(:))),'FontName','times','Fontsize',10)
+subplot(3, 3, 9)
+vmag = linspace(min(cf_i2_kV(:)), max(cf_i2_kV(:)), 10);
+mypolar([0 2*pi], [0 max(lat_grd_mat(:))/ pi * 180], x, y, cf_i2_kV, vmag);
+text(-50, -50, sprintf('Min\n%2.1f',min(cf_i2_kV(:))),'FontName','times','Fontsize',10)
+text(30, -50, sprintf('Max\n%2.1f [kV]',max(cf_i2_kV(:))),'FontName','times','Fontsize',10)
+
+cmax = max([max(abs(cf_l2_kV)) max(abs(cf_l3_kV)) max(abs(cf_kV))...
+    max(abs(cf_l2_i1_kV)) max(abs(cf_l3_i1_kV)) max(abs(cf_i1_kV))...
+    max(abs(cf_l2_i2_kV)) max(abs(cf_l3_i2_kV)) max(abs(cf_i2_kV))]);
 caxis([-cmax cmax])
 colormap(jet)
 h = colorbar;
