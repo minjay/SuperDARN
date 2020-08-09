@@ -18,15 +18,21 @@ lon_grd_mat = fliplr(reshape(lon_grd, [41 180])' / 180 * pi);
 lon_rot = lon_grd_mat - pi/2;
 [x, y] = pol2cart(lon_rot, lat_grd_mat / pi * 180);
 
-for i = 20
-    figure
+subplot = @(m,n,p) subtightplot (m, n, p, [0.05 0.075], [0.05 0.1], [0.05 0.2]);
+
+for i = 90
+    subplot(1, 1, 1)
     sam_pot = fliplr(reshape(pot(i, :), [41 180])');
+    sam_pot = sam_pot / 1e3;
 
     vmag = linspace(min(sam_pot(:)), max(sam_pot(:)), 10);
     mypolar([0 2*pi], [0 max(lat_grd_mat(:)) / pi * 180], x, y, sam_pot, vmag);
     
     title(ts(i, :))
 end
+colormap(jet)
+h = colorbar;
+set(h, 'Position', [.85 0.1 .025 .8]);
 
 angle = 270 / 180 * pi;
 
