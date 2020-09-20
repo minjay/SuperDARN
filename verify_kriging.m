@@ -71,14 +71,22 @@ hline = refline(1, 0);
 hline.Color = 'r';
 hline.LineWidth = 2;
 hline.LineStyle = '--';
-xlabel('Observed')
-ylabel('Fitted')
+xlabel('Observed','Fontsize',12)
+ylabel('Fitted','Fontsize',12)
 
 % compute Pearson correlation coefficient
 corr_out_sample = corrcoef(Y(unsampled_index), Y_fitted(unsampled_index));
 corr_out_sample = corr_out_sample(1, 2);
-t = text(-800, 800, strcat('Pearson corr coef=', sprintf('%.2f', corr_out_sample)));
-t.FontSize = 14;
+text(-600, 800, strcat('Pearson corr coef=', sprintf('%.2f', corr_out_sample)),'FontName','times','Fontsize',16);
+
+ax = gca;
+outerpos = ax.OuterPosition;
+ti = ax.TightInset; 
+left = outerpos(1) + ti(1);
+bottom = outerpos(2) + ti(2);
+ax_width = outerpos(3) - ti(1) - ti(3);
+ax_height = outerpos(4) - ti(2) - ti(4);
+ax.Position = [left bottom ax_width ax_height];
 
 % in-sample predictions
 figure
@@ -95,8 +103,7 @@ ylabel('Fitted')
 % compute Pearson correlation coefficient
 corr_in_sample = corrcoef(Y(sampled_index), Y_fitted(sampled_index));
 corr_in_sample = corr_in_sample(1, 2);
-t = text(-800, 800, strcat('Pearson corr coef=', sprintf('%.2f', corr_in_sample)));
-t.FontSize = 14;
+text(-800, 800, strcat('Pearson corr coef=', sprintf('%.2f', corr_in_sample)),'FontName','times','Fontsize',16);
 
 tau_hat = mean(1 ./ sqrt(post_samples.tau_sq_inv)) ./ factor;
 
