@@ -8,6 +8,8 @@ load('sd_theta.mat')
 load('sd_phi.mat')
 load('sd_k_theta.mat');
 load('sd_k_phi.mat');
+% load data from Xueling
+load('2012-02-29_data_4hour.mat')
 
 B = 2;
 j_min = 2;
@@ -55,8 +57,14 @@ A2c = A_2 * post_samples_c;
 
 DAc = mean(std_vec .* A1c - std_vec_deriv .* A2c, 2);
 
-Y_fitted = DAc ./ factor;
-
-Y = Vlos_res';
+Vlos_need = DAc ./ factor;
+Vlos_need = Vlos_need';
 
 load('voroni_sphere_index.mat')
+
+in_sample_or_not = zeros(1, size(Vlos_need, 2));
+in_sample_or_not(sampled_index) = 1;
+
+save('2012-02-29_data_4hour_with_pred.mat', 'gazm', 'glat', 'glon', 'mazm',...
+    'mlat', 'mlon', 'mlon_MLT', 'ts', 'Vlos_fitacf', 'Vlos_res', 'Vlos_SAM',...
+    'Vlos_std', 'Vlos_need');
