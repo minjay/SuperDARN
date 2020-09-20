@@ -77,6 +77,8 @@ ylabel('Fitted')
 % compute Pearson correlation coefficient
 corr_out_sample = corrcoef(Y(unsampled_index), Y_fitted(unsampled_index));
 corr_out_sample = corr_out_sample(1, 2);
+t = text(-800, 800, strcat('Pearson corr coef=', sprintf('%.2f', corr_out_sample)));
+t.FontSize = 14;
 
 % in-sample predictions
 figure
@@ -93,6 +95,8 @@ ylabel('Fitted')
 % compute Pearson correlation coefficient
 corr_in_sample = corrcoef(Y(sampled_index), Y_fitted(sampled_index));
 corr_in_sample = corr_in_sample(1, 2);
+t = text(-800, 800, strcat('Pearson corr coef=', sprintf('%.2f', corr_in_sample)));
+t.FontSize = 14;
 
 tau_hat = mean(1 ./ sqrt(post_samples.tau_sq_inv)) ./ factor;
 
