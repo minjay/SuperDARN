@@ -74,6 +74,10 @@ hline.LineStyle = '--';
 xlabel('Observed')
 ylabel('Fitted')
 
+% compute Pearson correlation coefficient
+corr_out_sample = corrcoef(Y(unsampled_index), Y_fitted(unsampled_index));
+corr_out_sample = corr_out_sample(1, 2);
+
 % in-sample predictions
 figure
 plot(Y(sampled_index), Y_fitted(sampled_index), 'o')
@@ -85,6 +89,10 @@ hline.LineWidth = 2;
 hline.LineStyle = '--';
 xlabel('Observed')
 ylabel('Fitted')
+
+% compute Pearson correlation coefficient
+corr_in_sample = corrcoef(Y(sampled_index), Y_fitted(sampled_index));
+corr_in_sample = corr_in_sample(1, 2);
 
 tau_hat = mean(1 ./ sqrt(post_samples.tau_sq_inv)) ./ factor;
 
